@@ -63,8 +63,8 @@ public class TestSupportUtils {
 
     public static TransferRequestDto getPaymentTransferRequest() {
         TransferRequestDto paymentTransferRequest = new TransferRequestDto().builder()
-                .senderId("111")
-                .receiverId("222")
+                .debtorAccount("111")
+                .creditorAccount("222")
                 .amount(new BigDecimal(20))
                 .currency(CurrencyType.GBP.name())
                 .build();

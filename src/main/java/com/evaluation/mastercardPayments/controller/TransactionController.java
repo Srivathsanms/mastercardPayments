@@ -29,6 +29,7 @@ public class TransactionController {
     @Autowired
     TransactionService transactionService;
 
+    //Done refractoring
     @PostMapping("/addAmount")
     public ResponseEntity<HttpStatus> addAmount(@Valid @RequestBody AddAmountDto addAmountRequest) throws CustomException {
         LOG.info("Adding amount to the account Id  {}", addAmountRequest.getAccountId());
@@ -38,7 +39,7 @@ public class TransactionController {
 
     @PostMapping("/transfer")
     public ResponseEntity<HttpStatus> transferMoney(@Valid @RequestBody TransferRequestDto paymentTransferRequest) throws CustomException {
-        transactionService.transferMoney(paymentTransferRequest);
+        transactionService.transferAmount(paymentTransferRequest);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

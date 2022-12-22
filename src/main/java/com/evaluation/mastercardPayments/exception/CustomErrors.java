@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum CustomErrors {
     INSUFFICIENT_FUNDS_AVAILABLE("Insufficient funds available"),
     INVALID_ACCOUNT_NUMBER("Invalid Account Number"),
+    NO_ACCOUNT_AVAILABLE("No Account Present"),
     NO_TRANSACTIONS_FOUND("No transactions found for this account"),
     INVALID_DEBTOR_ACCOUNT("Invalid Debtor account"),
     INACTIVE_DEBTOR_ACCOUNT("Debtor account not active"),

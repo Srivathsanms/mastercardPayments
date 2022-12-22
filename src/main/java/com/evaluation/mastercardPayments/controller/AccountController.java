@@ -38,6 +38,7 @@ public class AccountController {
     private AccountService accountService;
 
 
+    //Done refractoring
     @PostMapping("/create")
     public ResponseEntity<HttpStatus> createAccount(@Valid @RequestBody AccountRequestDto accountRequest) throws CustomException {
         LOG.info("Inside the Account Controller for creating account with accountId {}",accountRequest.getAccountId() );
@@ -45,20 +46,21 @@ public class AccountController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-
+//Done refractoring
     @GetMapping(value = "/account/{id}")
     public ResponseEntity<Object> getAccountDetails(@Valid @PathVariable("id") String accountId) throws CustomException {
         LOG.info("Inside Account Controller getting account details including real time balance for the account {}", accountId);
         return new ResponseEntity<>(accountService.getAccountDetails(accountId), HttpStatus.OK);
     }
 
+    //Done refractoring
     @GetMapping("/all")
     public ResponseEntity<Object> getAllAccounts() throws CustomException {
         LOG.info("Getting all the accounts");
         return new ResponseEntity<>(accountService.getAllAccountDetails(), HttpStatus.OK);
     }
 
-
+//Done refractoring
     @GetMapping("/{accountId}/statements/mini")
     public ResponseEntity<Object> getMiniStatement(@Valid @PathVariable String accountId) throws CustomException {
         LOG.info("Getting mini statement for the given account {}",accountId);
@@ -69,6 +71,7 @@ public class AccountController {
         return new ResponseEntity<>(miniStatement, HttpStatus.OK);
     }
 
+    //Done refractoring
     @PostMapping(value = "/delete")
     @ResponseBody
     public ResponseEntity<Object> deleteAccount(@RequestBody AccountRequestDto account) throws CustomException {

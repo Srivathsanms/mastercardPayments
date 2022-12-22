@@ -8,5 +8,5 @@ import com.evaluation.mastercardPayments.model.TransferRequestDto;
 public interface TransactionService {
 
     void addAmount(AddAmountDto addAmountDto) throws CustomException;
-    TransactionEntity transferMoney(TransferRequestDto paymentTransferRequest) throws CustomException;
+    TransactionEntity transferAmount(TransferRequestDto paymentTransferRequest) throws CustomException;
 }

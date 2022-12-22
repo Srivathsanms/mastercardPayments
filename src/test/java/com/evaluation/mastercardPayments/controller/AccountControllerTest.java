@@ -54,6 +54,12 @@ class AccountControllerTest {
 
     private List<AccountEntity> accounts;
 
+
+    //Create account,
+    // delete account,
+    // getMiniStatement,
+    // getAllAccounts,
+    // get account details,
     @BeforeEach
     void setUp() {
         this.mockAccount1 = new AccountEntity().builder()
@@ -73,16 +79,16 @@ class AccountControllerTest {
         accounts.add(mockAccount1);
         accounts.add(mockAccount2);
     }
-
+//Passed
     @Test
-    void getAccountDetails_Unauthorized() throws Exception {
+    void getAccountDetailsForRealTimeBalance_Unauthorized() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/account/111").accept(MediaType.APPLICATION_JSON);
         this.mockMvc.perform(requestBuilder).andExpect(status().isUnauthorized());
     }
 
     @Test
-    void getAccountDetails_WrongHttpMethod() throws Exception {
-        RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/account/111")
+    void getAccountDetailsForRealTimeBalance_WrongHttpMethod() throws Exception {
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/accounts/account/111")
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=");
 
@@ -148,7 +154,7 @@ class AccountControllerTest {
 
     @Test
     void transferMoney_Success() throws Exception {
-        Mockito.when(transactionService.transferMoney(Mockito.any(TransferRequestDto.class))).thenReturn(null);
+        Mockito.when(transactionService.transferAmount(Mockito.any(TransferRequestDto.class))).thenReturn(null);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = post("/accounts/transfer")
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=")

@@ -1,13 +1,11 @@
 package com.evaluation.mastercardPayments.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import com.evaluation.mastercardPayments.controller.AccountController;
 import com.evaluation.mastercardPayments.exception.CustomErrors;
 import com.evaluation.mastercardPayments.exception.CustomException;
 import com.evaluation.mastercardPayments.entity.AccountEntity;
@@ -15,7 +13,6 @@ import com.evaluation.mastercardPayments.dto.AccountRequestDto;
 import com.evaluation.mastercardPayments.model.AccountStatus;
 import com.evaluation.mastercardPayments.model.CurrencyType;
 import com.evaluation.mastercardPayments.model.MiniStatement;
-import com.evaluation.mastercardPayments.model.TransferRequestDto;
 import com.evaluation.mastercardPayments.entity.TransactionEntity;
 import com.evaluation.mastercardPayments.model.TransactionType;
 import com.evaluation.mastercardPayments.repository.AccountRepository;
@@ -29,9 +26,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-
 
 @Service
 @Primary
@@ -42,13 +36,14 @@ public class AccountServiceImpl implements AccountService {
     private              AccountRepository accountRepository;
 
     @Autowired
-    private TransactionRepository transactionDetailsRepository;
+    private TransactionRepository transactionRepository;
 
 
     public void createAccount(AccountRequestDto accountInfoRequest) throws CustomException {
         AccountEntity account = new AccountEntity().builder()
                 .id(accountInfoRequest.getAccountId())
                 .balance(BigDecimal.ZERO)
+                //TODO: Small logic change required
                 .currencyType(CurrencyType.valueOf(accountInfoRequest.getCurrency()))
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
@@ -77,28 +72,30 @@ public class AccountServiceImpl implements AccountService {
         List<AccountEntity> accounts = accountRepository.findAll();
         if (accounts.isEmpty()) {
             LOG.info("Getting all accounts failed and there are no accounts");
-            throw new CustomException("No Account present");
+            throw new CustomException(CustomErrors.NO_ACCOUNT_AVAILABLE);
         }
         return accounts;
     }
 
 
-
+    //TODO : I dont want to break the API contract provided in the example,
+    // Ideally I feel that this needs to be in the Transaction end point
+    //TODO : Open for discussion on this
     public List<MiniStatement> getMiniStatement(String accountId) throws CustomException {
         getAccountDetails(accountId);
-        List<TransactionEntity> transactions = transactionDetailsRepository.findTransactionsForAccount(Integer.parseInt(accountId));
+        List<TransactionEntity> transactions = transactionRepository.findTransactionsForAccount(Integer.parseInt(accountId));
         List<MiniStatement> miniStatements = new ArrayList<>();
         if(transactions.isEmpty()) {
             LOG.info("Transaction is empty for Id : {}", accountId);
             return Collections.emptyList();
         }
-        for (TransactionEntity txn : transactions) {
+        for (TransactionEntity tx : transactions) {
             MiniStatement miniStatement = new MiniStatement().builder()
-                    .accountId(txn.getSenderId().equals(accountId) ? txn.getReceiverId() : txn.getSenderId())
-                    .transactionAmount(txn.getTxnAmount())
-                    .currency(txn.getCurrencyType())
-                    .transactionType(txn.getSenderId().equals(accountId) ? TransactionType.DEBIT : TransactionType.CREDIT)
-                    .transactionTime(txn.getLocalDateTime())
+                    .accountId(tx.getDebtorAccount().equals(accountId) ? tx.getCreditorAccount() : tx.getDebtorAccount())
+                    .transactionAmount(tx.getTxAmount())
+                    .currency(tx.getCurrencyType())
+                    .transactionType(tx.getDebtorAccount().equals(accountId) ? TransactionType.DEBIT : TransactionType.CREDIT)
+                    .transactionTime(tx.getLocalDateTime())
                     .build();
             miniStatements.add(miniStatement);
         }
@@ -113,7 +110,7 @@ public class AccountServiceImpl implements AccountService {
         Optional<AccountEntity> accountEntity = accountRepository.findById(account.getAccountId());
         if(!accountEntity.isPresent()){
             LOG.info("Not able to delete account Id : {}", account.getAccountId());
-            throw new CustomException("Account is not present ");
+            throw new CustomException(CustomErrors.NO_ACCOUNT_AVAILABLE);
         }
         accountEntity.get().setAccountStatus(AccountStatus.INACTIVE);
         accountRepository.save(accountEntity.get());

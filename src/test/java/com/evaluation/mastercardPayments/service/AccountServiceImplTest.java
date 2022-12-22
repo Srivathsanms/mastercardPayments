@@ -114,8 +114,8 @@ class AccountServiceImplTest {
     @Test
     void transferMoney_success() throws CustomException {
         TransferRequestDto paymentTransferRequest = new TransferRequestDto().builder()
-                .senderId("111")
-                .receiverId("222")
+                .debtorAccount("111")
+                .creditorAccount("222")
                 .amount(new BigDecimal(20))
                 .currency(CurrencyType.GBP.name())
                 .build();
@@ -125,11 +125,11 @@ class AccountServiceImplTest {
         when(transactionDetailsRepository.save(Mockito.any(TransactionEntity.class))).thenReturn(null);
         //Mockito.doNothing().when(transactionDetailsRepository.save(Mockito.any()));
 
-        TransactionEntity transactionDetails = transactionService.transferMoney(paymentTransferRequest);
+        TransactionEntity transactionDetails = transactionService.transferAmount(paymentTransferRequest);
 
-        Assertions.assertEquals(transactionDetails.getSenderId(), 111);
-        Assertions.assertEquals(transactionDetails.getReceiverId(), 222);
-        Assertions.assertEquals(transactionDetails.getTxnAmount(), new BigDecimal(20));
+        Assertions.assertEquals(transactionDetails.getDebtorAccount(), 111);
+        Assertions.assertEquals(transactionDetails.getCreditorAccount(), 222);
+        Assertions.assertEquals(transactionDetails.getTxAmount(), new BigDecimal(20));
         Assertions.assertEquals(transactionDetails.getCurrencyType(), CurrencyType.GBP);
     }
 
@@ -141,7 +141,7 @@ class AccountServiceImplTest {
         when(accountRepository.findById("222")).thenReturn(TestSupportUtils.getOptionalAccountInfo2());
 
         CustomException customException = Assertions.assertThrows(CustomException.class, () -> {
-            transactionService.transferMoney(paymentTransferRequest);
+            transactionService.transferAmount(paymentTransferRequest);
         }, "Custom exception is expected");
 
         Assertions.assertEquals("Invalid Sender Account : 111", customException.getCustomErrors().getErrorMessage());
@@ -154,7 +154,7 @@ class AccountServiceImplTest {
         when(accountRepository.findById("222")).thenReturn(TestSupportUtils.getOptionalAccountInfo2());
 
         CustomException customException = Assertions.assertThrows(CustomException.class, () -> {
-            transactionService.transferMoney(paymentTransferRequest);
+            transactionService.transferAmount(paymentTransferRequest);
         }, "Custom exception is expected");
 
         Assertions.assertEquals("Sender Account : 111 not Active", customException.getCustomErrors().getErrorMessage());

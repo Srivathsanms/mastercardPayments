@@ -22,16 +22,16 @@ public class TransactionEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    private String senderId;
+    private String debtorAccount;
 
-    private String receiverId;
+    private String creditorAccount;
 
     private LocalDateTime localDateTime;
 
-    private BigDecimal txnAmount;
+    private BigDecimal txAmount;
 
     @Enumerated(EnumType.STRING)
     private CurrencyType currencyType;
 
-    private String txnType;
+    private String txType;
 }

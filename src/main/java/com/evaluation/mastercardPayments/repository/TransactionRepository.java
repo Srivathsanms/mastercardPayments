@@ -13,8 +13,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Integer> {
-    //List<TransactionDetails> findAllBySenderIdOrReceiverId(int accountId);
-
-    @Query(value = "select * from transaction_entity where sender_id=:accountId or receiver_id=:accountId order by id desc limit 20", nativeQuery = true)
+    @Query(value = "select * from transaction_entity where debtor_account=:accountId or creditor_account=:accountId order by id desc limit 20", nativeQuery = true)
     List<TransactionEntity> findTransactionsForAccount(@Param("accountId") int accountId);
 }

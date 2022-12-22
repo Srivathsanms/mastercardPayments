@@ -19,11 +19,11 @@ public class TransferRequestDto {
 
     @NotNull
     @NotBlank
-    private String senderId;
+    private String debtorAccount;
 
     @NotNull
     @NotBlank
-    private String receiverId;
+    private String creditorAccount;
 
     @NotNull
     private BigDecimal amount;
