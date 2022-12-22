@@ -9,6 +9,8 @@ import com.evaluation.mastercardPayments.model.MiniStatement;
 import com.evaluation.mastercardPayments.model.TransferRequestDto;
 import com.evaluation.mastercardPayments.entity.TransactionEntity;
 
+import org.springframework.http.ResponseEntity;
+
 public interface AccountService {
     void createAccount(AccountRequestDto accountRequestDto) throws CustomException;
 
@@ -17,9 +19,9 @@ public interface AccountService {
 
     List<AccountEntity> getAllAccountDetails() throws CustomException;
 
-    TransactionEntity transferMoney(TransferRequestDto paymentTransferRequest) throws CustomException;
+   // TransactionEntity transferMoney(TransferRequestDto paymentTransferRequest) throws CustomException;
 
     List<MiniStatement> getMiniStatement(String accountId) throws CustomException;
 
-
+    ResponseEntity<Object> deleteAccount(AccountRequestDto account) throws CustomException;
 }

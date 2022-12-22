@@ -7,6 +7,8 @@ import com.evaluation.mastercardPayments.model.CurrencyType;
 import com.evaluation.mastercardPayments.model.TransferRequestDto;
 import com.evaluation.mastercardPayments.service.AccountService;
 
+import com.evaluation.mastercardPayments.service.TransactionService;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,9 @@ class AccountControllerTest {
 
     @MockBean
     AccountService accountService;
+
+    @MockBean
+    TransactionService transactionService;
 
     private AccountEntity mockAccount1;
 
@@ -143,7 +148,7 @@ class AccountControllerTest {
 
     @Test
     void transferMoney_Success() throws Exception {
-        Mockito.when(accountService.transferMoney(Mockito.any(TransferRequestDto.class))).thenReturn(null);
+        Mockito.when(transactionService.transferMoney(Mockito.any(TransferRequestDto.class))).thenReturn(null);
 
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder = post("/accounts/transfer")
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=")

@@ -43,6 +43,9 @@ class AccountServiceImplTest {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private TransactionService transactionService;
+
     @BeforeEach
     void setUp() {
     }
@@ -122,7 +125,7 @@ class AccountServiceImplTest {
         when(transactionDetailsRepository.save(Mockito.any(TransactionEntity.class))).thenReturn(null);
         //Mockito.doNothing().when(transactionDetailsRepository.save(Mockito.any()));
 
-        TransactionEntity transactionDetails = accountService.transferMoney(paymentTransferRequest);
+        TransactionEntity transactionDetails = transactionService.transferMoney(paymentTransferRequest);
 
         Assertions.assertEquals(transactionDetails.getSenderId(), 111);
         Assertions.assertEquals(transactionDetails.getReceiverId(), 222);
@@ -138,7 +141,7 @@ class AccountServiceImplTest {
         when(accountRepository.findById("222")).thenReturn(TestSupportUtils.getOptionalAccountInfo2());
 
         CustomException customException = Assertions.assertThrows(CustomException.class, () -> {
-            accountService.transferMoney(paymentTransferRequest);
+            transactionService.transferMoney(paymentTransferRequest);
         }, "Custom exception is expected");
 
         Assertions.assertEquals("Invalid Sender Account : 111", customException.getCustomErrors().getErrorMessage());
@@ -151,7 +154,7 @@ class AccountServiceImplTest {
         when(accountRepository.findById("222")).thenReturn(TestSupportUtils.getOptionalAccountInfo2());
 
         CustomException customException = Assertions.assertThrows(CustomException.class, () -> {
-            accountService.transferMoney(paymentTransferRequest);
+            transactionService.transferMoney(paymentTransferRequest);
         }, "Custom exception is expected");
 
         Assertions.assertEquals("Sender Account : 111 not Active", customException.getCustomErrors().getErrorMessage());

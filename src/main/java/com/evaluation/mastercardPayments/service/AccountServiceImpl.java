@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.evaluation.mastercardPayments.controller.AccountController;
 import com.evaluation.mastercardPayments.exception.CustomErrors;
 import com.evaluation.mastercardPayments.exception.CustomException;
 import com.evaluation.mastercardPayments.entity.AccountEntity;
@@ -21,8 +22,12 @@ import com.evaluation.mastercardPayments.repository.AccountRepository;
 
 import com.evaluation.mastercardPayments.repository.TransactionRepository;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Primary
 public class AccountServiceImpl implements AccountService {
 
+    private static final Logger LOG = LogManager.getLogger(AccountServiceImpl.class);
     @Autowired
-    private AccountRepository accountRepository;
+    private              AccountRepository accountRepository;
 
     @Autowired
     private TransactionRepository transactionDetailsRepository;
@@ -48,8 +54,10 @@ public class AccountServiceImpl implements AccountService {
                 .build();
         Optional<AccountEntity> findAccount = accountRepository.findById(account.getId());
         if (findAccount.isPresent()) {
+            LOG.info("Account already exist for Id : {}", accountInfoRequest.getAccountId());
             throw new CustomException(CustomErrors.ACCOUNT_ALREADY_EXIST);
         }
+        LOG.info("Creating Account for Id : {}", accountInfoRequest.getAccountId());
         accountRepository.save(account);
     }
 
@@ -58,51 +66,30 @@ public class AccountServiceImpl implements AccountService {
     public AccountEntity getAccountDetails(String accountId) throws CustomException {
         Optional<AccountEntity> accountInfo = accountRepository.findById(accountId);
         if (accountInfo.isPresent()) {
+            LOG.info("Got Account Details for Id : {}", accountId);
             return accountInfo.get();
         }
+        LOG.info("Fetching details for the Id :{} failed", accountId);
         throw new CustomException(CustomErrors.INVALID_ACCOUNT_NUMBER);
     }
 
     public List<AccountEntity> getAllAccountDetails() throws CustomException {
         List<AccountEntity> accounts = accountRepository.findAll();
         if (accounts.isEmpty()) {
+            LOG.info("Getting all accounts failed and there are no accounts");
             throw new CustomException("No Account present");
         }
         return accounts;
     }
 
-    @Transactional
-    public TransactionEntity transferMoney(TransferRequestDto paymentTransferRequest) throws CustomException {
-        AccountEntity debtorAccount = validateSenderAccount(paymentTransferRequest);
-        AccountEntity creditorAccount = validateReceiverAccount(paymentTransferRequest);
 
-        //Debit from Sender Account
-        debtorAccount.setBalance(debtorAccount.getBalance().subtract(paymentTransferRequest.getAmount()));
-        //accountRepository.save(debtorAccount);
-
-        //Credit Receiver Account
-        creditorAccount.setBalance(creditorAccount.getBalance().add(paymentTransferRequest.getAmount()));
-        //accountRepository.save(creditorAccount);
-
-
-        TransactionEntity transactionDetails = new TransactionEntity().builder()
-                .senderId(debtorAccount.getId())
-                .receiverId(creditorAccount.getId())
-                .txnAmount(paymentTransferRequest.getAmount())
-                .localDateTime(LocalDateTime.now())
-                .currencyType(CurrencyType.valueOf(paymentTransferRequest.getCurrency()))
-                .build();
-
-        //Log in transaction table
-        transactionDetailsRepository.save(transactionDetails);
-        return transactionDetails;
-    }
 
     public List<MiniStatement> getMiniStatement(String accountId) throws CustomException {
         getAccountDetails(accountId);
         List<TransactionEntity> transactions = transactionDetailsRepository.findTransactionsForAccount(Integer.parseInt(accountId));
         List<MiniStatement> miniStatements = new ArrayList<>();
         if(transactions.isEmpty()) {
+            LOG.info("Transaction is empty for Id : {}", accountId);
             return Collections.emptyList();
         }
         for (TransactionEntity txn : transactions) {
@@ -115,38 +102,22 @@ public class AccountServiceImpl implements AccountService {
                     .build();
             miniStatements.add(miniStatement);
         }
+        LOG.info("Collected mini statement for the accountId {} " +
+                        "and the transaction size is : {}",
+                accountId,miniStatements.size());
         return miniStatements;
     }
 
-    /*Make sure Sender Account must exists and ACTIVE and balance amount must be more than transfer amount*/
-    private AccountEntity validateSenderAccount(TransferRequestDto transferRequest) throws CustomException {
-        Optional<AccountEntity> account = accountRepository.findById(transferRequest.getSenderId());
-        if (!account.isPresent()) {
-            throw new CustomException("Invalid Sender Account : " + transferRequest.getSenderId());
+    @Override
+    public ResponseEntity<Object> deleteAccount(AccountRequestDto account) throws CustomException {
+        Optional<AccountEntity> accountEntity = accountRepository.findById(account.getAccountId());
+        if(!accountEntity.isPresent()){
+            LOG.info("Not able to delete account Id : {}", account.getAccountId());
+            throw new CustomException("Account is not present ");
         }
-        AccountEntity senderAccount = account.get();
-        if (senderAccount.getAccountStatus() == AccountStatus.INACTIVE) {
-            throw new CustomException("Sender Account : " + transferRequest.getSenderId() + " not Active");
-        }
-
-        if (!(senderAccount.getBalance().compareTo(transferRequest.getAmount()) >= 0)) {
-            throw new CustomException("Insufficient funds available");
-        }
-        return senderAccount;
+        accountEntity.get().setAccountStatus(AccountStatus.INACTIVE);
+        accountRepository.save(accountEntity.get());
+        LOG.info("Deleted account Id : {}", account.getAccountId());
+        return new ResponseEntity<>(accountEntity, HttpStatus.OK);
     }
-
-    /*Sender Account must be valid and ACTIVE */
-    private AccountEntity validateReceiverAccount(TransferRequestDto transferreques) throws CustomException {
-        Optional<AccountEntity> account = accountRepository.findById(transferreques.getReceiverId());
-        if (!account.isPresent()) {
-            throw new CustomException("Invalid Receiver Account : " + transferreques.getReceiverId());
-        }
-        AccountEntity receiverAccount = account.get();
-        if (receiverAccount.getAccountStatus() == AccountStatus.INACTIVE) {
-            throw new CustomException("Receiver Account : " + transferreques.getReceiverId() + " not Active");
-        }
-        return receiverAccount;
-    }
-
-
 }

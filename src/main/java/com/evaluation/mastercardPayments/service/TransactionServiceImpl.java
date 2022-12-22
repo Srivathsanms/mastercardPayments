@@ -1,5 +1,6 @@
 package com.evaluation.mastercardPayments.service;
 
+import com.evaluation.mastercardPayments.controller.AccountController;
 import com.evaluation.mastercardPayments.dto.AddAmountDto;
 import com.evaluation.mastercardPayments.entity.AccountEntity;
 import com.evaluation.mastercardPayments.entity.TransactionEntity;
@@ -12,6 +13,8 @@ import com.evaluation.mastercardPayments.repository.AccountRepository;
 
 import com.evaluation.mastercardPayments.repository.TransactionRepository;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,8 @@ import java.util.Optional;
 public class TransactionServiceImpl implements TransactionService {
 
 
+    private static final Logger LOG = LogManager.getLogger(AccountController.class);
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -35,6 +40,7 @@ public class TransactionServiceImpl implements TransactionService {
     public void addAmount(AddAmountDto addAmountDto) throws CustomException {
         Optional<AccountEntity> accountInfo = accountRepository.findById(addAmountDto.getAccountId());
         if(!accountInfo.isPresent()){
+            LOG.info("Account  {} not available to add amount ", addAmountDto.getAccountId());
             throw new CustomException(CustomErrors.INVALID_ACCOUNT_NUMBER);
         }
         accountInfo.get().setBalance(addAmountDto.getAmount().add(accountInfo.get().getBalance()));
@@ -44,6 +50,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     public TransactionEntity transferMoney(TransferRequestDto paymentTransferRequest) throws CustomException {
+        LOG.info("Transfer amount initiated ");
         AccountEntity debtorAccount = validateSenderAccount(paymentTransferRequest);
         AccountEntity creditorAccount = validateReceiverAccount(paymentTransferRequest);
 
@@ -72,10 +79,12 @@ public class TransactionServiceImpl implements TransactionService {
     private AccountEntity validateReceiverAccount(TransferRequestDto transferreques) throws CustomException {
         Optional<AccountEntity> account = accountRepository.findById(transferreques.getReceiverId());
         if (!account.isPresent()) {
+            LOG.info("Invalid creditor account {}", transferreques.getSenderId());
             throw new CustomException(CustomErrors.INVALID_CREDITOR_ACCOUNT);
         }
         AccountEntity receiverAccount = account.get();
         if (receiverAccount.getAccountStatus() == AccountStatus.INACTIVE) {
+            LOG.info("Inactive creditor account {} ", transferreques.getSenderId());
             throw new CustomException(CustomErrors.INACTIVE_CREDITOR_ACCOUNT);
         }
         return receiverAccount;
@@ -86,14 +95,17 @@ public class TransactionServiceImpl implements TransactionService {
     private AccountEntity validateSenderAccount(TransferRequestDto transferRequest) throws CustomException {
         Optional<AccountEntity> account = accountRepository.findById(transferRequest.getSenderId());
         if (!account.isPresent()) {
+            LOG.info("Invalid debtor account {}", transferRequest.getSenderId());
             throw new CustomException(CustomErrors.INVALID_DEBTOR_ACCOUNT);
         }
         AccountEntity senderAccount = account.get();
         if (senderAccount.getAccountStatus() == AccountStatus.INACTIVE) {
+            LOG.info("Debtor account is Invalid {}", transferRequest.getSenderId());
             throw new CustomException(CustomErrors.INACTIVE_DEBTOR_ACCOUNT);
         }
 
         if (!(senderAccount.getBalance().compareTo(transferRequest.getAmount()) >= 0)) {
+            LOG.info("Insuficient fund for debtor {} ", transferRequest.getSenderId());
             throw new CustomException(CustomErrors.INSUFFICIENT_FUNDS_AVAILABLE);
         }
         return senderAccount;

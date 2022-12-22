@@ -27,7 +27,6 @@ public class AccountRequestDto {
     private BigDecimal balance;
 
     @NotNull
-    @NotBlank
     @Size(min = 1, max = 3)
     private String currency;
 }
