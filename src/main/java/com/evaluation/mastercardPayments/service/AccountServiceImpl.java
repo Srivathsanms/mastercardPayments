@@ -106,7 +106,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<Object> deleteAccount(AccountRequestDto account) throws CustomException {
+    public AccountEntity deleteAccount(AccountRequestDto account) throws CustomException {
         Optional<AccountEntity> accountEntity = accountRepository.findById(account.getAccountId());
         if(!accountEntity.isPresent()){
             LOG.info("Not able to delete account Id : {}", account.getAccountId());
@@ -115,6 +115,6 @@ public class AccountServiceImpl implements AccountService {
         accountEntity.get().setAccountStatus(AccountStatus.INACTIVE);
         accountRepository.save(accountEntity.get());
         LOG.info("Deleted account Id : {}", account.getAccountId());
-        return new ResponseEntity<>(accountEntity, HttpStatus.OK);
+        return accountEntity.get();
     }
 }

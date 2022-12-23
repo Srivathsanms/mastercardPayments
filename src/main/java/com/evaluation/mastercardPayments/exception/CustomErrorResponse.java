@@ -1,5 +1,6 @@
 package com.evaluation.mastercardPayments.exception;
 
+import org.springframework.http.HttpStatus;
 
 public class CustomErrorResponse {
 
@@ -29,6 +30,9 @@ public class CustomErrorResponse {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
+
+    public void setErrorCode(HttpStatus status) {
+        }
 }
 
 

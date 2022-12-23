@@ -23,5 +23,5 @@ public interface AccountService {
 
     List<MiniStatement> getMiniStatement(String accountId) throws CustomException;
 
-    ResponseEntity<Object> deleteAccount(AccountRequestDto account) throws CustomException;
+    AccountEntity deleteAccount(AccountRequestDto account) throws CustomException;
 }

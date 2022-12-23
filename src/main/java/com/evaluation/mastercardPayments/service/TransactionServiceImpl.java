@@ -50,25 +50,29 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Transactional
-    public TransactionEntity transferAmount(TransferRequestDto paymentTransferRequest) throws CustomException {
+    //TODO: transfer between same account should not be allowed ?
+    public TransactionEntity transferAmount(TransferRequestDto transferRequestDto) throws CustomException {
         LOG.info("Transfer amount initiated ");
-        AccountEntity debtorAccount = validateSenderAccount(paymentTransferRequest);
-        AccountEntity creditorAccount = validateReceiverAccount(paymentTransferRequest);
-        debtorAccount.setBalance(debtorAccount.getBalance().subtract(paymentTransferRequest.getAmount()));
-        creditorAccount.setBalance(creditorAccount.getBalance().add(paymentTransferRequest.getAmount()));
+        if(transferRequestDto.getDebtorAccount().equals(transferRequestDto.getCreditorAccount())){
+            LOG.info("Same creditor and Debtor Account Number, cannot do the transaction for account number : {}", transferRequestDto.getDebtorAccount());
+            throw new CustomException(CustomErrors.CREDITOR_AND_DEBTOR_ACCOUNT_NUMBER_ARE_SAME);
+        }
+        AccountEntity debtorAccount = validateDebtorAccount(transferRequestDto);
+        AccountEntity creditorAccount = validateCreditorAccount(transferRequestDto);
+        debtorAccount.setBalance(debtorAccount.getBalance().subtract(transferRequestDto.getAmount()));
+        creditorAccount.setBalance(creditorAccount.getBalance().add(transferRequestDto.getAmount()));
         TransactionEntity transactionDetails = new TransactionEntity().builder()
                 .debtorAccount(debtorAccount.getId())
                 .creditorAccount(creditorAccount.getId())
-                .txAmount(paymentTransferRequest.getAmount())
+                .txAmount(transferRequestDto.getAmount())
                 .localDateTime(LocalDateTime.now())
-                .currencyType(CurrencyType.valueOf(paymentTransferRequest.getCurrency()))
+                .currencyType(CurrencyType.valueOf(transferRequestDto.getCurrency()))
                 .build();
-
         transactionDetailsRepository.save(transactionDetails);
         return transactionDetails;
     }
 
-    private AccountEntity validateReceiverAccount(TransferRequestDto transferRequest) throws CustomException {
+    private AccountEntity validateCreditorAccount(TransferRequestDto transferRequest) throws CustomException {
         Optional<AccountEntity> account = accountRepository.findById(transferRequest.getCreditorAccount());
         if (!account.isPresent()) {
             LOG.info("Invalid creditor account {}", transferRequest.getDebtorAccount());
@@ -83,7 +87,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
 
-    private AccountEntity validateSenderAccount(TransferRequestDto transferRequest) throws CustomException {
+    private AccountEntity validateDebtorAccount(TransferRequestDto transferRequest) throws CustomException {
         Optional<AccountEntity> account = accountRepository.findById(transferRequest.getDebtorAccount());
         if (!account.isPresent()) {
             LOG.info("Invalid debtor account {}", transferRequest.getDebtorAccount());
